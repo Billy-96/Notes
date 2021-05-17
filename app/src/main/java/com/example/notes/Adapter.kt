@@ -1,5 +1,6 @@
 package com.example.notes
 
+import android.content.Context
 import android.text.TextUtils.replace
 import android.view.LayoutInflater
 import android.view.TextureView

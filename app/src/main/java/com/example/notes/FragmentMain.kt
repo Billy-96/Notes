@@ -6,6 +6,8 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
@@ -73,12 +75,27 @@ class FragmentMain : Fragment(), Adapter.OnCardItemClick {
     }
 
     override fun onDeleteClick(position: Int) {
-        val sharedPreference = context?.getSharedPreferences("list", Context.MODE_PRIVATE)
-        val editor = sharedPreference?.edit()
-        Utils.notes.removeAt(position)
-        val userNotesString = gson.toJson(Utils.notes)
-        editor?.putString("list", userNotesString)
-        editor?.apply()
-        adapter.notifyDataSetChanged()
+        val alertDialog = context?.let {
+            AlertDialog.Builder(it)
+                .setTitle("Удаление")
+                .setMessage("Вы правда хотите удалить заметку про ${Utils.notes[position].title}")
+                .setIcon(R.drawable.ic_baseline_delete_24)
+                .setPositiveButton("Удалить"){ dialog, which ->
+                    val sharedPreference = context?.getSharedPreferences("list", Context.MODE_PRIVATE)
+                    val editor = sharedPreference?.edit()
+                    Utils.notes.removeAt(position)
+                    val userNotesString = gson.toJson(Utils.notes)
+                    editor?.putString("list", userNotesString)
+                    editor?.apply()
+                    adapter.notifyDataSetChanged()
+                }
+                .setNegativeButton("Отмена"){ dialog, which ->
+                    Toast.makeText(context,"Думайте", Toast.LENGTH_SHORT).show()
+                }
+                .create()
+        }
+
+        alertDialog!!.show()
+
     }
 }

@@ -19,6 +19,7 @@ class Adapter(
 
 
     inner class Holder(itemView: View) : RecyclerView.ViewHolder(itemView),View.OnClickListener {
+
         var change = itemView.findViewById<ImageView>(R.id.change)
         var delete = itemView.findViewById<ImageView>(R.id.delete)
         var cardView = itemView.findViewById<CardView>(R.id.card)
@@ -48,6 +49,7 @@ class Adapter(
     }
 
     override fun onBindViewHolder(holder: Holder, position: Int) {
+
         val currentNote: Note = notes.get(position)
         holder.title.setText(currentNote.title)
         holder.body.setText(currentNote.body)

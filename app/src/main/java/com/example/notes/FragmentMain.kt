@@ -43,6 +43,7 @@ class FragmentMain : Fragment(), Adapter.OnCardItemClick {
         recyclerView.layoutManager = LinearLayoutManager(view.context)
         adapter = Adapter( Utils.notes,this)
         recyclerView.adapter = adapter
+
     }
 
     override fun onCardClick(position: Int) {
@@ -80,8 +81,9 @@ class FragmentMain : Fragment(), Adapter.OnCardItemClick {
                 .setTitle("Удаление")
                 .setMessage("Вы правда хотите удалить заметку про ${Utils.notes[position].title}")
                 .setIcon(R.drawable.ic_baseline_delete_24)
-                .setPositiveButton("Удалить"){ dialog, which ->
-                    val sharedPreference = context?.getSharedPreferences("list", Context.MODE_PRIVATE)
+                .setPositiveButton("Удалить") { dialog, which ->
+                    val sharedPreference =
+                        context?.getSharedPreferences("list", Context.MODE_PRIVATE)
                     val editor = sharedPreference?.edit()
                     Utils.notes.removeAt(position)
                     val userNotesString = gson.toJson(Utils.notes)
@@ -89,8 +91,8 @@ class FragmentMain : Fragment(), Adapter.OnCardItemClick {
                     editor?.apply()
                     adapter.notifyDataSetChanged()
                 }
-                .setNegativeButton("Отмена"){ dialog, which ->
-                    Toast.makeText(context,"Думайте", Toast.LENGTH_SHORT).show()
+                .setNegativeButton("Отмена") { dialog, which ->
+                    Toast.makeText(context, "Думайте", Toast.LENGTH_SHORT).show()
                 }
                 .create()
         }
@@ -98,4 +100,5 @@ class FragmentMain : Fragment(), Adapter.OnCardItemClick {
         alertDialog!!.show()
 
     }
+
 }

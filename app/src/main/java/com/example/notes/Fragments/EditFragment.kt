@@ -1,8 +1,6 @@
-package com.example.notes
+package com.example.notes.Fragments
 
-import android.content.Context
 import android.os.Bundle
-import android.text.Editable
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -10,9 +8,12 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
+import com.example.notes.Note
+import com.example.notes.R
+import com.example.notes.Utils.Utils
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
-import org.w3c.dom.Text
-import java.text.DateFormat
 
 
 class EditFragment : Fragment() {
@@ -21,6 +22,7 @@ class EditFragment : Fragment() {
     lateinit var editDescription : EditText
     lateinit var save : Button
     val gson = Gson()
+    val db : FirebaseFirestore = FirebaseFirestore.getInstance()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -40,25 +42,32 @@ class EditFragment : Fragment() {
         editTitle = view.findViewById<EditText>(R.id.edit_text_title)
         editTime = view.findViewById(R.id.titme_edit)
         editDescription = view.findViewById(R.id.edit_text_description)
-        
+
         editTitle.setText(note.title)
-        editTime.text = DateFormat.getDateInstance().format(note.time).toString()
+        editTime.text = note.time.toString()
         editDescription.setText(note.body)
 
-        save.setOnClickListener({
+        save.setOnClickListener{
             note.title = editTitle.text.toString()
             note.body = editDescription.text.toString()
-            setSharedPreferences(Utils.notes)
-        })
 
-
+            db.collection("notes")
+                .document(note.id)
+                .update(convertObjectToMap(note))
+                .addOnSuccessListener { _->
+                    Toast.makeText(context,"Success",Toast.LENGTH_SHORT).show()
+                }
+                .addOnFailureListener{ e ->
+                    Toast.makeText(context,"Failure: $e",Toast.LENGTH_SHORT).show()
+                }
+        }
     }
-    private fun setSharedPreferences(userNotes: MutableList<Note>) {
-        val sharedPreference =
-            context?.getSharedPreferences("list", Context.MODE_PRIVATE)
-        val editor = sharedPreference?.edit()
-        val userNotesString = gson.toJson(userNotes)
-        editor?.putString("list", userNotesString)
-        editor?.apply()
+    private fun convertObjectToMap(note: Note): Map<String,String> {
+        return mapOf(
+            "title" to note.title,
+            "body" to note.body,
+            "time" to note.time,
+            "id" to note.id
+        )
     }
 }

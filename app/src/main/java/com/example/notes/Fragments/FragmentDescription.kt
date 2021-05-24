@@ -1,18 +1,14 @@
-package com.example.notes
+package com.example.notes.Fragments
 
-import android.icu.text.MessageFormat.format
 import android.os.Bundle
-import android.text.format.DateFormat.format
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import java.lang.String.format
-import java.text.DateFormat
-import java.text.MessageFormat.format
-import java.time.format.DateTimeFormatter
-import java.util.*
+import com.example.notes.Note
+import com.example.notes.R
+import com.example.notes.Utils.Utils
 
 class FragmentDescription : Fragment() {
 
@@ -32,9 +28,6 @@ class FragmentDescription : Fragment() {
 
         view.findViewById<TextView>(R.id.title_description).text = note.title
         view.findViewById<TextView>(R.id.body_description).text = note.body
-        view.findViewById<TextView>(R.id.time_description).text =  DateFormat.getDateInstance().format(note.time).toString()
-
-       
-
+        view.findViewById<TextView>(R.id.time_description).text =  note.time
     }
 }

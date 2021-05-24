@@ -1,6 +1,7 @@
-package com.example.notes
+package com.example.notes.Fragments
 
-import android.content.Context
+import com.example.notes.Adapters.Adapter
+import com.example.notes.Utils.Utils
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -10,12 +11,13 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.gson.Gson
-import java.util.*
+import com.example.notes.*
+import com.google.firebase.firestore.FirebaseFirestore
 
 class FragmentMain : Fragment(), Adapter.OnCardItemClick {
     lateinit var adapter: Adapter
-    val gson = Gson()
+    lateinit var recyclerView: RecyclerView
+    val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -28,32 +30,47 @@ class FragmentMain : Fragment(), Adapter.OnCardItemClick {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (Utils.notes.size == 0){
-            val note1 = Note("First Title", "First Description",Date(),false)
-            val note2 = Note("Second Title", "Second Description", Date() , false)
-            val note3 = Note("Third Title", "Third Description", Date(), false)
-            Utils.notes.add(note1)
-            Utils.notes.add(note2)
-            Utils.notes.add(note3)
-            Utils.notes.add(Note("Fourth Title","Fourth Description",Date(),false))
-        }
+        recyclerView = view.findViewById(R.id.recycle)
+        retrieveData()
 
+    }
 
-        val recyclerView = view.findViewById<RecyclerView>(R.id.recycle)
-        recyclerView.layoutManager = LinearLayoutManager(view.context)
-        adapter = Adapter( Utils.notes,this)
+    private fun configureList(list: MutableList<Note>) {
+        recyclerView.layoutManager = LinearLayoutManager(view?.context)
+        adapter = Adapter(Utils.notes, this)
         recyclerView.adapter = adapter
+    }
+
+    private fun retrieveData() {
+        Utils.notes.clear()
+        db.collection("notes")
+            .get()
+            .addOnCompleteListener {
+                if (it.isSuccessful) {
+                    for (document in it.result!!) {
+                        val note = Note(
+                            document.data["title"] as String,
+                            document.data["body"] as String,
+                            document.data["time"] as String,
+                            document.data["id"] as String
+                        )
+                        Utils.notes.add(note)
+                    }
+                    configureList(Utils.notes)
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Failure: $e", Toast.LENGTH_SHORT).show()
+            }
 
     }
 
     override fun onCardClick(position: Int) {
         var bundle = Bundle()
-        bundle.putSerializable(Utils.key,  Utils.notes[position])
+        bundle.putSerializable(Utils.key, Utils.notes[position])
 
         val fragment = FragmentDescription()
         fragment.arguments = bundle
-
-        Utils.notes[position].readen = true
 
         parentFragmentManager.beginTransaction()
             .replace(R.id.container, fragment)
@@ -64,7 +81,7 @@ class FragmentMain : Fragment(), Adapter.OnCardItemClick {
 
     override fun onChangeClick(position: Int) {
         var bundle = Bundle()
-        bundle.putSerializable(Utils.key,  Utils.notes[position])
+        bundle.putSerializable(Utils.key, Utils.notes[position])
 
         val fragment = EditFragment()
         fragment.arguments = bundle
@@ -82,13 +99,16 @@ class FragmentMain : Fragment(), Adapter.OnCardItemClick {
                 .setMessage("Вы правда хотите удалить заметку про ${Utils.notes[position].title}")
                 .setIcon(R.drawable.ic_baseline_delete_24)
                 .setPositiveButton("Удалить") { dialog, which ->
-                    val sharedPreference =
-                        context?.getSharedPreferences("list", Context.MODE_PRIVATE)
-                    val editor = sharedPreference?.edit()
+                    db.collection("notes")
+                        .document(Utils.notes[position].id)
+                        .delete()
+                        .addOnSuccessListener { _ ->
+                            Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(context, "Failure: $e", Toast.LENGTH_SHORT).show()
+                        }
                     Utils.notes.removeAt(position)
-                    val userNotesString = gson.toJson(Utils.notes)
-                    editor?.putString("list", userNotesString)
-                    editor?.apply()
                     adapter.notifyDataSetChanged()
                 }
                 .setNegativeButton("Отмена") { dialog, which ->
@@ -96,9 +116,6 @@ class FragmentMain : Fragment(), Adapter.OnCardItemClick {
                 }
                 .create()
         }
-
         alertDialog!!.show()
-
     }
-
 }
